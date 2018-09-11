@@ -3,7 +3,8 @@ import os
 import shutil
 import subprocess
 import sys
-sys.path.append("/home/shifeng/Code/Object_Detection/SSD/python")
+# 这个路径指向自己编译的refinedet的python目录
+sys.path.insert(0, "/homec/wyj/github/RefineDet/build/install/python")
 
 from caffe.proto import caffe_pb2
 from google.protobuf import text_format
@@ -16,8 +17,8 @@ if __name__ == "__main__":
       help="The file which contains image paths and annotation info.")
   parser.add_argument("outdir",
       help="The output directory which stores the database file.")
-  parser.add_argument("exampledir",
-      help="The directory to store the link of the database files.")
+  # parser.add_argument("exampledir",
+  #     help="The directory to store the link of the database files.")
   parser.add_argument("--redo", default = False, action = "store_true",
       help="Recreate the database.")
   parser.add_argument("--anno-type", default = "classification",
@@ -53,7 +54,7 @@ if __name__ == "__main__":
   root_dir = args.root
   list_file = args.listfile
   out_dir = args.outdir
-  example_dir = args.exampledir
+  # example_dir = args.exampledir
 
   redo = args.redo
   anno_type = args.anno_type
@@ -160,9 +161,9 @@ if __name__ == "__main__":
   process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
   output = process.communicate()[0]
 
-  if not os.path.exists(example_dir):
-    os.makedirs(example_dir)
-  link_dir = os.path.join(example_dir, os.path.basename(out_dir))
-  if os.path.exists(link_dir):
-    os.unlink(link_dir)
-  os.symlink(out_dir, link_dir)
+  # if not os.path.exists(example_dir):
+  #   os.makedirs(example_dir)
+  # link_dir = os.path.join(example_dir, os.path.basename(out_dir))
+  # if os.path.exists(link_dir):
+  #   os.unlink(link_dir)
+  # os.symlink(out_dir, link_dir)
