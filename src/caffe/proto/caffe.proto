@@ -542,6 +542,7 @@ message LayerParameter {
   optional TileParameter tile_param = 138;
   optional VideoDataParameter video_data_param = 207;
   optional WindowDataParameter window_data_param = 129;
+  optional ReLU6Parameter relu6_param = 208;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1923,4 +1924,13 @@ message PReLUParameter {
   optional FillerParameter filler = 1;
   // Whether or not slope paramters are shared across channels.
   optional bool channel_shared = 2 [default = false];
+}
+// Message that stores parameters used by ReLU6Layer
+message ReLU6Parameter {
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 2 [default = DEFAULT];
 }
