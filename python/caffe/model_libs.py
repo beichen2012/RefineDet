@@ -1291,7 +1291,7 @@ def MobileNetV2_BottleNeck_s2(net, from_layer, c_in, c_out, t, conv_kwargs, sb_k
     return layer_out
 
 
-def MobileNetV2Body(net, from_layer):
+def MobileNetV2Body(net, from_layer, alpha = 1.0, c = 6):
     conv_kwargs = {
         'param': [dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)],
         'weight_filler': dict(type='msra'),
@@ -1302,7 +1302,7 @@ def MobileNetV2Body(net, from_layer):
 
 
     # conv1
-    net['conv1'] = L.Convolution(net[from_layer], num_output=32, kernel_size=3, pad=1, stride=2, **conv_kwargs)
+    net['conv1'] = L.Convolution(net[from_layer], num_output=int(32*alpha), kernel_size=3, pad=1, stride=2, **conv_kwargs)
     net['conv1/bn'] = L.BatchNorm(net['conv1'], in_place=True)
     net['conv1/scale'] = L.Scale(net['conv1/bn'], in_place=True, **sb_kwargs)
     net['conv1/relu'] = L.ReLU(net['conv1/scale'], in_place=True)
@@ -1310,55 +1310,55 @@ def MobileNetV2Body(net, from_layer):
     # conv2
     ## 2_1
     ### pw - in, t = 1
-    net['conv2_1/in/pw'] = L.Convolution(net['conv1/relu'], num_output=32, kernel_size=1, pad=0, stride=1, **conv_kwargs)
+    net['conv2_1/in/pw'] = L.Convolution(net['conv1/relu'], num_output=int(32*alpha), kernel_size=1, pad=0, stride=1, **conv_kwargs)
     net['conv2_1/in/pw/bn'] = L.BatchNorm(net['conv2_1/in/pw'], in_place=True)
     net['conv2_1/in/pw/scale'] = L.Scale(net['conv2_1/in/pw/bn'], in_place=True, **sb_kwargs)
     net['conv2_1/in/pw/relu'] = L.ReLU6(net['conv2_1/in/pw/scale'], in_place=True)
 
     ### dw
-    net['conv2_1/dw'] = L.Convolution(net['conv2_1/in/pw/relu'], num_output=32, group=32, kernel_size=3, pad=1, stride=1, **conv_kwargs)
+    net['conv2_1/dw'] = L.Convolution(net['conv2_1/in/pw/relu'], num_output=int(32*alpha), group=int(32*alpha), kernel_size=3, pad=1, stride=1, **conv_kwargs)
     net['conv2_1/dw/bn'] = L.BatchNorm(net['conv2_1/dw'], in_place=True)
     net['conv2_1/dw/scale'] = L.Scale(net['conv2_1/dw/bn'], in_place=True, **sb_kwargs)
     net['conv2_1/dw/relu'] = L.ReLU6(net['conv2_1/dw/scale'], in_place=True)
 
     ### pw - out - linear, c = 16
-    net['conv2_1/out/pw'] = L.Convolution(net['conv2_1/dw/relu'], num_output=16, kernel_size=1, pad=0, stride=1, **conv_kwargs)
+    net['conv2_1/out/pw'] = L.Convolution(net['conv2_1/dw/relu'], num_output=int(16*alpha), kernel_size=1, pad=0, stride=1, **conv_kwargs)
     net['conv2_1/out/pw/bn'] = L.BatchNorm(net['conv2_1/out/pw'], in_place=True)
     net['conv2_1/out/pw/scale'] = L.Scale(net['conv2_1/out/pw/bn'], in_place=True, **sb_kwargs)
 
     # 3_1
-    layer_out = MobileNetV2_BottleNeck_s2(net, "conv2_1/out/pw/scale", 16, 24, 6, conv_kwargs, sb_kwargs, prefix="3_1")
+    layer_out = MobileNetV2_BottleNeck_s2(net, "conv2_1/out/pw/scale", int(16*alpha), int(24*alpha), c, conv_kwargs, sb_kwargs, prefix="3_1")
     # 3_2
-    layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, 24, 24, 6, conv_kwargs, sb_kwargs, prefix="3_2")
+    layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, int(24*alpha), int(24*alpha), c, conv_kwargs, sb_kwargs, prefix="3_2")
 
     # 4_1
-    layer_out = MobileNetV2_BottleNeck_s2(net, layer_out, 24, 32, 6, conv_kwargs, sb_kwargs, prefix="4_1")
+    layer_out = MobileNetV2_BottleNeck_s2(net, layer_out, int(24*alpha), int(32*alpha), c, conv_kwargs, sb_kwargs, prefix="4_1")
     # 4_2,3
     for i in range(2, 4):
         prefix = '4_{}'.format(i)
-        layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, 32, 32, 6, conv_kwargs, sb_kwargs, prefix=prefix)
+        layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, int(32*alpha), int(32*alpha), c, conv_kwargs, sb_kwargs, prefix=prefix)
 
     # 5_1
-    layer_out = MobileNetV2_BottleNeck_s2(net, layer_out, 32, 64, 6, conv_kwargs, sb_kwargs, prefix='5_1')
+    layer_out = MobileNetV2_BottleNeck_s2(net, layer_out, int(32*alpha), int(64*alpha), c, conv_kwargs, sb_kwargs, prefix='5_1')
     # 5_2,3,4
     for i in range(2, 5):
         prefix = '5_{}'.format(i)
-        layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, 64, 64, 6, conv_kwargs, sb_kwargs, prefix=prefix)
+        layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, int(64*alpha), int(64*alpha), c, conv_kwargs, sb_kwargs, prefix=prefix)
 
     # 6_1
-    layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, 64, 96, 6, conv_kwargs, sb_kwargs, prefix='6_1', has_sum=False)
+    layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, int(64*alpha), int(96*alpha), c, conv_kwargs, sb_kwargs, prefix='6_1', has_sum=False)
     # 6_,2,3
     for i in range(2,4):
         prefix = '6_{}'.format(i)
-        layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, 96, 96, 6, conv_kwargs, sb_kwargs, prefix=prefix)
+        layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, int(96*alpha), int(96*alpha), c, conv_kwargs, sb_kwargs, prefix=prefix)
 
     # 7_1
-    layer_out = MobileNetV2_BottleNeck_s2(net, layer_out, 96, 160, 6, conv_kwargs, sb_kwargs, prefix='7_1')
+    layer_out = MobileNetV2_BottleNeck_s2(net, layer_out, int(96*alpha), int(160*alpha), c, conv_kwargs, sb_kwargs, prefix='7_1')
     # 7_2,3
     for i in range(2, 4):
         prefix = '7_{}'.format(i)
-        layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, 160, 160, 6, conv_kwargs, sb_kwargs, prefix=prefix)
+        layer_out = MobileNetV2_BottleNeck_s1(net, layer_out, int(160*alpha), int(160*alpha), c, conv_kwargs, sb_kwargs, prefix=prefix)
 
     # 8_1
-    layer_out = MobileNetV2_BottleNeck_s2(net, layer_out, 160, 320, 6, conv_kwargs, sb_kwargs, prefix='8_1')
+    layer_out = MobileNetV2_BottleNeck_s2(net, layer_out, int(160*alpha), int(320*alpha), c, conv_kwargs, sb_kwargs, prefix='8_1')
 
