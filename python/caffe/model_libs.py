@@ -1202,10 +1202,15 @@ def MobileNetV2_BottleNeck_s1(net, from_layer, c_in, c_out, t, conv_kwargs, sb_k
     layer_out = 'conv{}/in/pw/relu{}'.format(prefix, postfix)
     net[layer_out] = L.ReLU6(net[layer_in], in_place=True)
 
-    # dw s = 2
+    # dw s = 1
     layer_in = layer_out
     layer_out = "conv{}/dw{}".format(prefix, postfix)
-    net[layer_out] = L.Convolution(net[layer_in], num_output=t * c_in, group=t*c_in, kernel_size=3, stride=1, pad=1, **conv_kwargs)
+    # net[layer_out] = L.ConvolutionDepthwise(net[layer_in], num_output=t * c_in, kernel_size=3, stride=1, pad=1, **conv_kwargs)
+    net[layer_out] = L.ConvolutionDepthwise(net[layer_in],
+                                               convolution_param=dict(num_output=t * c_in, kernel_size=3,
+                                                                      pad=1, stride=1, weight_filler=dict(type='msra'),
+                                                                      bias_filler=dict(type='constant', value=0)),
+                                               param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)])
 
     layer_in = layer_out
     layer_out = "conv{}/dw/bn{}".format(prefix, postfix)
@@ -1261,7 +1266,12 @@ def MobileNetV2_BottleNeck_s2(net, from_layer, c_in, c_out, t, conv_kwargs, sb_k
     # dw s = 2
     layer_in = layer_out
     layer_out = "conv{}/dw{}".format(prefix, postfix)
-    net[layer_out] = L.Convolution(net[layer_in], num_output=t * c_in, group=t*c_in, kernel_size=3, stride=2, pad=1, **conv_kwargs)
+    # net[layer_out] = L.ConvolutionDepthwise(net[layer_in], num_output=t * c_in, kernel_size=3, stride=2, pad=1, **conv_kwargs)
+    net[layer_out] = L.ConvolutionDepthwise(net[layer_in],
+                                               convolution_param=dict(num_output=t * c_in, kernel_size=3,
+                                               pad=1, stride=2, weight_filler=dict(type='msra'),
+                                                                      bias_filler=dict(type='constant', value=0)),
+                                               param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)])
 
     layer_in = layer_out
     layer_out = "conv{}/dw/bn{}".format(prefix, postfix)
@@ -1316,7 +1326,11 @@ def MobileNetV2Body(net, from_layer, alpha = 1.0, c = 6):
     net['conv2_1/in/pw/relu'] = L.ReLU6(net['conv2_1/in/pw/scale'], in_place=True)
 
     ### dw
-    net['conv2_1/dw'] = L.Convolution(net['conv2_1/in/pw/relu'], num_output=int(32*alpha), group=int(32*alpha), kernel_size=3, pad=1, stride=1, **conv_kwargs)
+    net['conv2_1/dw'] = L.ConvolutionDepthwise(net['conv2_1/in/pw/relu'],
+                                               convolution_param=dict(num_output=int(32 * alpha), kernel_size=3,
+                                               pad=1, stride=1, weight_filler=dict(type='msra'),
+                                                                      bias_filler=dict(type='constant', value=0)),
+                                               param=[dict(lr_mult=1, decay_mult=1), dict(lr_mult=2, decay_mult=0)])
     net['conv2_1/dw/bn'] = L.BatchNorm(net['conv2_1/dw'], in_place=True)
     net['conv2_1/dw/scale'] = L.Scale(net['conv2_1/dw/bn'], in_place=True, **sb_kwargs)
     net['conv2_1/dw/relu'] = L.ReLU6(net['conv2_1/dw/scale'], in_place=True)

@@ -269,7 +269,7 @@ name_size_file = "data/VOC0712/test_name_size.txt"
 # The pretrained model. We use the Fully convolutional reduced (atrous) VGGNet.
 pretrain_model = "models/VGGNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel"
 # Stores LabelMapItem.
-label_map_file = "../../data/VOC0712/labelmap_voc.prototxt"
+label_map_file = "/homec/wyj/github/RefineDet/data/VOC0712/labelmap_voc.prototxt"
 
 # MultiBoxLoss parameters.
 num_classes = 21
